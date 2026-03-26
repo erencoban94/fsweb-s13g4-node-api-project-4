@@ -13,13 +13,12 @@ let kullanicilar = [
 ];
 
 // --- ARA YAZILIM (Middleware) ---
-// Sadece giriş yapanların listeyi görmesini sağlar
 function kontrolEt(req, res, next) {
     const { kullaniciadi, sifre } = req.headers;
     const user = kullanicilar.find(u => u.kullaniciadi === kullaniciadi);
 
     if (user && bcrypt.compareSync(sifre, user.sifre)) {
-        next(); // Bilgiler doğru, yola devam
+        next(); 
     } else {
         res.status(401).json({ mesaj: "Bu listeyi görmek için geçerli kullanıcı adı ve şifreyi 'Header' kısmından göndermelisiniz." });
     }
@@ -38,13 +37,19 @@ server.get('/', (req, res) => {
             <p id="mesaj"></p>
             <script>
                 async function kaydet() {
+                    const u = document.getElementById('u');
+                    const p = document.getElementById('p');
                     const res = await fetch('/api/kayıtol', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({kullaniciadi: u.value, sifre: p.value})
                     });
                     const data = await res.json();
-                    document.getElementById('mesaj').innerText = "Kayıt Başarılı: " + data.kullaniciadi;
+                    if(res.ok) {
+                        document.getElementById('mesaj').innerText = "Kayıt Başarılı: " + data.kullaniciadi;
+                    } else {
+                        document.getElementById('mesaj').innerText = "Hata: " + data.mesaj;
+                    }
                 }
             </script>
         </div>
@@ -56,7 +61,7 @@ server.get('/api/kullanıcılar', kontrolEt, (req, res) => {
     res.json(kullanicilar);
 });
 
-// 3. Kayıt Ol (Şifreyi Hash'ler)
+// 3. Kayıt Ol
 server.post('/api/kayıtol', (req, res) => {
     const { kullaniciadi, sifre } = req.body;
     if (!kullaniciadi || !sifre) return res.status(400).json({ mesaj: "Eksik bilgi" });
@@ -84,5 +89,5 @@ server.post('/api/giriş', (req, res) => {
 
 const PORT = process.env.PORT || 9000;
 server.listen(PORT, () => {
-    console.log(`Sunucu ${PORT} portunda fırtına gibi çalışıyor...`);
+    console.log(`Sunucu http://localhost:${PORT} adresinde fırtına gibi çalışıyor...`);
 });
